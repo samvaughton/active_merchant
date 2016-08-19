@@ -1026,6 +1026,12 @@ usa_epay_advanced:
   password: Y
   software_id: Z
 
+# Working credentials, no need to replace
+vacaypay:
+  payment_strategy_uuid: '2833dda1-b5da-4b16-9f52-8b53f4e7f884'
+  api_key: 'SGD0qydBXp58i0n5QHnTG38D-OOzvDu0KlVliOhZpyw'
+  account_uuid: nil # Optional - Payment Strategy UUID will be used to get this UUID
+
 valitor:
   login: WebsiteID
   password: SecurityNumber
