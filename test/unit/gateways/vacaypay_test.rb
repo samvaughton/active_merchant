@@ -4,7 +4,8 @@ class VacaypayTest < Test::Unit::TestCase
   def setup
     @gateway = VacaypayGateway.new(
         api_key: 'SGD0qydBXp58i0n5QHnTG38D-OOzvDu0KlVliOhZpyw',
-        payment_strategy_uuid: '2833dda1-b5da-4b16-9f52-8b53f4e7f884'
+        account_uuid: '0b72d273-5caf-4a4d-aaf3-3c18267e213e',
+        publishable_key: 'pk_test_rIQe8LhRJGCutDnRGtJADcm2'
     )
     @credit_card = credit_card
     @amount = 10000
@@ -20,22 +21,22 @@ class VacaypayTest < Test::Unit::TestCase
     }
   end
 
-  def test_account_credentials_required
+  def test_publishable_key_required
     temp_gateway = VacaypayGateway.new(
         api_key: 'some-random-string',
-        payment_strategy_uuid: 'some-random-string'
+        account_uuid: 'some-random-string'
     )
 
-    temp_gateway.clear_account_uuid
+    temp_gateway.clear_publishable_key
 
     temp_gateway.expects(:fetch_account_details)
 
-    temp_gateway.fetch_account_details_if_empty
+    temp_gateway.fetch_publishable_key_if_empty
   end
 
-  def test_account_credentials_not_required
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    @gateway.expects(:fetch_account_details_if_empty)
+  def test_publishable_key_not_required
+    @gateway.expects(:ssl_post).twice.returns(successful_purchase_response)
+    @gateway.expects(:fetch_publishable_key_if_empty)
     @gateway.expects(:fetch_account_details).never
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -43,7 +44,7 @@ class VacaypayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).twice.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -54,7 +55,7 @@ class VacaypayTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).twice.returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -62,7 +63,7 @@ class VacaypayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).twice.returns(successful_authorize_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -74,7 +75,7 @@ class VacaypayTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).twice.returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
@@ -194,13 +195,27 @@ SSL established
       {
         "appCode": 0,
         "appMessage": "",
-        "meta": {},
+        "meta": [],
         "data": {
-          "strategyUuid": "2833dda1-b5da-4b16-9f52-8b53f4e7f884",
-          "strategyType": "vacaypay",
-          "accountUuid": "0b72d273-5caf-4a4d-aaf3-3c18267e213e",
-          "accountRoute": "/api/v1/vacay-pay/accounts/0b72d273-5caf-4a4d-aaf3-3c18267e213e",
-          "paymentRoute": "/api/v1/vacay-pay/accounts/0b72d273-5caf-4a4d-aaf3-3c18267e213e/payments"
+            "uuid": "2760dd7a-34f4-4278-9e3c-d86f46041fbc",
+            "accountName": "Example Account",
+            "accountType": "vacaypay",
+            "publishableKey": "pk_test_rIQe8LhRJGCutDnRGtJADcm2",
+            "statementDescriptor": "JANE DOE RENTALS",
+            "tradingName": "Jane Doe Rentals",
+            "defaultCurrency": "GBP",
+            "allowedCurrencies": ["GBP", "EUR"],
+            "country": "GB",
+            "email": "janedoe@gmail.com",
+            "firstName": "Jane",
+            "lastName": "Doe",
+            "bookingTermsUrl": "https://www.procuro.io/terms-and-conditions",
+            "enabled": true,
+            "verified": true,
+            "vacayPayApproved": true,
+            "canTakePayments": true,
+            "createdAt": "2015-05-20 09:30:10 UTC",
+            "updatedAt": "2015-05-21 09:35:24 UTC"
         }
       }
     )

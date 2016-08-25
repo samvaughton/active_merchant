@@ -6,16 +6,9 @@ class RemoteVacaypayTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4000000000000002')
-    @new_credit_card = credit_card('5105105105105100')
-    @debit_card = credit_card('4000056655665556')
-
-    @check = check({
-                       bank_name: "STRIPE TEST BANK",
-                       account_number: "000123456789",
-                       routing_number: "110000000",
-                   })
-    @verified_bank_account = fixtures(:stripe_verified_bank_account)
-
+    @tokenize_decline_card = credit_card('4000000000000002', {
+        :verification_value => nil
+    })
     @amount = 10000
 
     @options = {
@@ -29,6 +22,16 @@ class RemoteVacaypayTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_tokenize
+    response = @gateway.tokenize(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_tokenize
+    response = @gateway.tokenize(@tokenize_decline_card, @options)
+    assert_failure response
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -38,9 +41,9 @@ class RemoteVacaypayTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
 
     options = @options.merge({
-                                 :externalPaymentReference => 'payment-test-1234',
-                                 :externalBookingReference => 'booking-test-1234'
-                             })
+      :externalPaymentReference => 'payment-test-1234',
+      :externalBookingReference => 'booking-test-1234'
+    })
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -69,7 +72,6 @@ class RemoteVacaypayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'card_declined', response.error_code
-    assert_equal 'Your card was declined.', response.message
   end
 
   def test_partial_capture
@@ -134,7 +136,7 @@ class RemoteVacaypayTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = VacaypayGateway.new(api_key: '0', payment_strategy_uuid: '0')
+    gateway = VacaypayGateway.new(api_key: '0', account_uuid: '0')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
